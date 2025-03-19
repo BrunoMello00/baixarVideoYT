@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baixar Vídeo do YouTube</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Baixar Vídeo do YouTube</h1>
+        <form id="downloadForm" method="POST" action="/download">
+            <div class="mb-3">
+                <label for="youtubeUrl" class="form-label">Insira os links dos vídeos do YouTube (separados por vírgulas):</label>
+                <textarea class="form-control" id="youtubeUrl" name="youtubeUrl" rows="3" placeholder="https://www.youtube.com/watch?v=... , https://www.youtube.com/watch?v=..." required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="downloadPath" class="form-label">Caminho para salvar os vídeos:</label>
+                <input type="text" class="form-control" id="downloadPath" name="downloadPath" placeholder="Exemplo: C:\VideosYT" required>
+            </div>
+            <div class="mb-3">
+                <label for="format" class="form-label">Formato:</label>
+                <select class="form-select" id="format" name="format">
+                    <option value="mp4">MP4</option>
+                    <option value="mp3">MP3</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="resolution" class="form-label">Resolução:</label>
+                <select class="form-select" id="resolution" name="resolution">
+                    <option value="best">Melhor Qualidade</option>
+                    <option value="1080p">1080p</option>
+                    <option value="720p">720p</option>
+                    <option value="480p">480p</option>
+                    <option value="360p">360p</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Baixar Vídeos</button>
+        </form>
+        <!-- Spinner de carregamento -->
+        <div id="loadingSpinner" class="text-center mt-3" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p>Baixando os vídeos, por favor aguarde...</p>
+        </div>
+        <!-- Mensagem de resposta -->
+        <div id="responseMessage" class="mt-3"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const form = document.getElementById('downloadForm');
+        const spinner = document.getElementById('loadingSpinner');
+        const responseMessage = document.getElementById('responseMessage');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Impede o envio padrão do formulário
+            spinner.style.display = 'block'; // Mostra o spinner
+            responseMessage.innerHTML = ''; // Limpa mensagens anteriores
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const results = await response.json();
+                spinner.style.display = 'none'; // Esconde o spinner
+
+                // Exibe o status de cada vídeo
+                results.forEach(result => {
+                    const alertClass = result.status === 'success' ? 'alert-success' : 'alert-danger';
+                    responseMessage.innerHTML += `<div class="alert ${alertClass}"><strong>URL:</strong> ${result.url}<br><strong>Status:</strong> ${result.message}</div>`;
+                });
+            } catch (error) {
+                spinner.style.display = 'none'; // Esconde o spinner
+                responseMessage.innerHTML = `<div class="alert alert-danger">Erro: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>
