@@ -4,20 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baixar Vídeo do YouTube</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_v2.css') }}">
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='faviconImage.ico') }}">
 </head>
 <body>
     <div class="container mt-5">
         <h1 class="text-center">Baixar Vídeo do YouTube</h1>
         <form id="downloadForm" method="POST" action="/download">
+            <!-- Campo para inserir URLs -->
             <div class="mb-3">
                 <label for="youtubeUrl" class="form-label">Insira os links dos vídeos do YouTube (separados por vírgulas):</label>
                 <textarea class="form-control" id="youtubeUrl" name="youtubeUrl" rows="3" placeholder="https://www.youtube.com/watch?v=... , https://www.youtube.com/watch?v=..." required></textarea>
             </div>
+            <!-- Escolha do destino do download -->
             <div class="mb-3">
-                <label for="downloadPath" class="form-label">Caminho para salvar os vídeos:</label>
-                <input type="text" class="form-control" id="downloadPath" name="downloadPath" placeholder="Exemplo: C:\VideosYT" required>
+                <label for="downloadDestination" class="form-label">Escolha onde salvar os vídeos:</label>
+                <select class="form-select" id="downloadDestination" name="downloadDestination">
+                    <option value="server">Baixar no celular</option>
+                    <option value="pc">Salvar no computador</option>
+                </select>
             </div>
+            <!-- Escolha do formato -->
             <div class="mb-3">
                 <label for="format" class="form-label">Formato:</label>
                 <select class="form-select" id="format" name="format">
@@ -25,6 +36,7 @@
                     <option value="mp3">MP3</option>
                 </select>
             </div>
+            <!-- Escolha da resolução -->
             <div class="mb-3">
                 <label for="resolution" class="form-label">Resolução:</label>
                 <select class="form-select" id="resolution" name="resolution">
@@ -35,6 +47,7 @@
                     <option value="360p">360p</option>
                 </select>
             </div>
+            <!-- Botão de envio -->
             <button type="submit" class="btn btn-primary w-100">Baixar Vídeos</button>
         </form>
         <!-- Spinner de carregamento -->
@@ -47,7 +60,9 @@
         <!-- Mensagem de resposta -->
         <div id="responseMessage" class="mt-3"></div>
     </div>
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Script personalizado -->
     <script>
         const form = document.getElementById('downloadForm');
         const spinner = document.getElementById('loadingSpinner');
@@ -65,15 +80,25 @@
                     method: 'POST',
                     body: formData
                 });
-
+            
                 const results = await response.json();
                 spinner.style.display = 'none'; // Esconde o spinner
-
-                // Exibe o status de cada vídeo
-                results.forEach(result => {
-                    const alertClass = result.status === 'success' ? 'alert-success' : 'alert-danger';
-                    responseMessage.innerHTML += `<div class="alert ${alertClass}"><strong>URL:</strong> ${result.url}<br><strong>Status:</strong> ${result.message}</div>`;
-                });
+            
+                // Verifica se o backend retornou um erro
+                if (results.error) {
+                    responseMessage.innerHTML = `<div class="alert alert-danger">Erro: ${results.error}</div>`;
+                    return;
+                }
+            
+                // Exibe o status de cada vídeo (se for uma lista)
+                if (Array.isArray(results)) {
+                    results.forEach(result => {
+                        const alertClass = result.status === 'success' ? 'alert-success' : 'alert-danger';
+                        responseMessage.innerHTML += `<div class="alert ${alertClass}"><strong>URL:</strong> ${result.url}<br><strong>Status:</strong> ${result.message}</div>`;
+                    });
+                } else {
+                    responseMessage.innerHTML = `<div class="alert alert-danger">Erro inesperado no servidor.</div>`;
+                }
             } catch (error) {
                 spinner.style.display = 'none'; // Esconde o spinner
                 responseMessage.innerHTML = `<div class="alert alert-danger">Erro: ${error.message}</div>`;
